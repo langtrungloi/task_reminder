@@ -63,6 +63,32 @@ export default function LoginPage() {
     }
   }
 
+  const handleResendConfirm = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const supabase = createClient()
+      // Use signInWithOtp to send a link which effectively allows the user
+      // to confirm and sign in if they own the email (works as a resend)
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) throw error
+
+      alert('Confirmation link resent (magic link). Check your email.')
+    } catch (error: any) {
+      setError(error.message || 'Failed to resend confirmation')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
@@ -110,6 +136,16 @@ export default function LoginPage() {
             >
               Send Magic Link
             </Button>
+            <div className="mt-3">
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={handleResendConfirm}
+                disabled={loading}
+              >
+                Resend Confirmation Link
+              </Button>
+            </div>
           </div>
           <div className="mt-4 text-center text-sm">
             <span className="text-muted-foreground">Don't have an account? </span>
