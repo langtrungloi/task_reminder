@@ -15,7 +15,9 @@ declare global {
   }
 }
 
-const supabase = createClient()
+function getSupabaseClient() {
+  return createClient()
+}
 
 function formatTaskDate(dateString: string | null) {
   if (!dateString) return 'No due date'
@@ -155,6 +157,7 @@ export function OutlookAddinPanel() {
   useEffect(() => {
     const restoreSession = async () => {
       setLoading(true)
+      const supabase = getSupabaseClient()
       const { data } = await supabase.auth.getSession()
       if (data.session?.user) {
         setAuthenticated(true)
@@ -168,6 +171,7 @@ export function OutlookAddinPanel() {
 
   const loadTasks = async () => {
     setLoading(true)
+    const supabase = getSupabaseClient()
     const { data: userData, error: userError } = await supabase.auth.getUser()
     if (userError || !userData.user) {
       setAuthenticated(false)
@@ -176,8 +180,9 @@ export function OutlookAddinPanel() {
       return
     }
 
+    const client = getSupabaseClient()
     const userId = userData.user.id
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('tasks')
       .select('*')
       .or(`created_by.eq.${userId},id.in.(select task_id from task_assignments where assignee_id.eq.${userId})`)
@@ -245,6 +250,7 @@ export function OutlookAddinPanel() {
     setError('')
 
     try {
+      const supabase = getSupabaseClient()
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
       if (authError) throw authError
       setAuthenticated(true)
@@ -262,6 +268,7 @@ export function OutlookAddinPanel() {
     setError('')
 
     try {
+      const supabase = getSupabaseClient()
       const { error: magicError } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/outlook-addin` } })
       if (magicError) throw magicError
       setMagicSent(true)
@@ -274,6 +281,7 @@ export function OutlookAddinPanel() {
 
   const handleSignOut = async () => {
     setLoading(true)
+    const supabase = getSupabaseClient()
     await supabase.auth.signOut()
     setAuthenticated(false)
     setTasks([])
@@ -302,6 +310,7 @@ export function OutlookAddinPanel() {
     setSuccessMessage('')
 
     try {
+      const supabase = getSupabaseClient()
       const { data: userData, error: userError } = await supabase.auth.getUser()
       if (userError || !userData.user) throw new Error('Người dùng chưa đăng nhập')
 
