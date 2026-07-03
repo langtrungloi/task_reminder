@@ -1,13 +1,14 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getServerUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { TaskCard } from '@/components/TaskCard'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function TasksPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getServerUser()
 
   if (!user) {
     redirect('/auth/login')
@@ -50,14 +51,18 @@ export default async function TasksPage() {
 }
 
 async function getTasks(userId: string) {
-  const supabase = createClient()
+  try {
+    const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('tasks')
-    .select('*')
-    .or(`created_by.eq.${userId},id.in.(select task_id from task_assignments where assignee_id.eq.${userId})`)
-    .order('created_at', { ascending: false })
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .or(`created_by.eq.${userId},id.in.(select task_id from task_assignments where assignee_id.eq.${userId})`)
+      .order('created_at', { ascending: false })
 
-  if (error) throw error
-  return data || []
+    if (error) throw error
+    return data || []
+  } catch {
+    return []
+  }
 }

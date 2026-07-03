@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getServerUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { TaskCard } from '@/components/TaskCard'
 import { Button } from '@/components/ui/button'
@@ -8,10 +8,11 @@ import Link from 'next/link'
 import { ReminderSettings } from '@/components/ReminderSettings'
 import { Reminder } from '@/types'
 
+export const dynamic = 'force-dynamic'
+
 export default async function TaskDetailPage(props: any) {
   const params = props.params as { id: string }
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getServerUser()
 
   if (!user) {
     redirect('/auth/login')
@@ -97,29 +98,37 @@ export default async function TaskDetailPage(props: any) {
 }
 
 async function getTaskById(taskId: string) {
-  const supabase = createClient()
+  try {
+    const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('tasks')
-    .select('*')
-    .eq('id', taskId)
-    .single()
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('id', taskId)
+      .single()
 
-  if (error) throw error
-  return data
+    if (error) throw error
+    return data
+  } catch {
+    return null
+  }
 }
 
 async function getTaskReminders(taskId: string) {
-  const supabase = createClient()
+  try {
+    const supabase = createClient()
 
-  const { data, error } = await supabase
-    .from('reminders')
-    .select('*')
-    .eq('task_id', taskId)
-    .order('reminder_time', { ascending: true })
+    const { data, error } = await supabase
+      .from('reminders')
+      .select('*')
+      .eq('task_id', taskId)
+      .order('reminder_time', { ascending: true })
 
-  if (error) throw error
-  return data as Reminder[]
+    if (error) throw error
+    return data as Reminder[]
+  } catch {
+    return []
+  }
 }
 
 async function deleteTask(taskId: string) {
