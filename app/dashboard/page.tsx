@@ -35,12 +35,19 @@ export default async function DashboardPage() {
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back! Here's your task overview.</p>
         </div>
-        <Link href="/tasks/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Task
-          </Button>
-        </Link>
+        <div className="flex items-center space-x-3">
+          <Link href="/outlook-addin">
+            <Button variant="outline">
+              Assign Task
+            </Button>
+          </Link>
+          <Link href="/tasks/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              New Task
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <DashboardStats tasks={tasks} />
